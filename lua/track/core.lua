@@ -8,7 +8,7 @@ local Root = require("track.model.root")
 local Mark = require("track.model.mark")
 local Pad = require("track.pad")
 
-local URI = require("track.dev.enum").URI
+local TERM = require("track.dev.enum").M_TYPE.TERM
 
 local log = require("track.dev.log")
 local if_nil = vim.F.if_nil
@@ -41,7 +41,7 @@ function M:mark(file, branch_name, save)
   end
 
   local mark = Mark({ uri = file })
-  if mark.type == URI.TERM then mark.uri = util.clean_term_uri(file) end
+  if mark.type == TERM then mark.uri = util.clean_term_uri(file) end
   root.branches[branch_name]:add_mark(mark)
   if save then state.save() end
   return self
@@ -59,7 +59,7 @@ function M:unmark(file, branch_name, save)
 
   if not branch_name then branch_name = root.main end
   local mark = Mark({ uri = file })
-  if mark.type == URI.TERM then mark.uri = util.clean_term_uri(file) end
+  if mark.type == TERM then mark.uri = util.clean_term_uri(file) end
 
   local branch = root.branches[branch_name]
   if not branch or not branch.marks[mark:absolute()] then return self end

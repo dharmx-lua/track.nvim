@@ -63,7 +63,6 @@
 ---@class Root
 ---@field path string Path to root.
 ---@field label? string Small description/title about the root.
----@field links? string[] Shortcuts to other roots.
 ---@field branches Branch[] Branch map. Key is the same as `Branch.label` and value is a `Branch` instance.
 ---@field main string Master branch. This is similar to the `main` branch in GIT.
 ---@field stashed? string Flag variable that will be set if a branch has been stashed.
@@ -76,7 +75,6 @@
 ---@class RootFields
 ---@field path string Path to root.
 ---@field label? string Small description/title about the root.
----@field links? string[] Shortcuts to other roots.
 ---@field branches? Branch[] Branch map. Key is the same as `Branch.name` and value is a `Branch` instance.
 ---@field main? string Master branch. This is similar to the `main` branch in GIT.
 ---@field stashed? string Flag variable that will be set if a branch has been stashed.
@@ -100,20 +98,18 @@
 ---@field maximum_history? number Maximum number of marks that are allowed to be in `history` table.
 ---@field history Mark[] Deleted/Uneeded marks are sent here. This acts as a recycle bin for marks.
 
----@alias MarkType "directory"|"link"|"file"
+---@alias MarkType string
 
 ---A class that represents a mark. A mark is a path inside (most of the time)
 ---your current working directory. It serves as a project-scoped file-bookmark.
 ---@class Mark
 ---@field path string Path to mark.
----@field label? string Optional label for that the mark.
 ---@field absolute string Absolute path to mark.
 ---@field type? string Type of mark.
 ---@field _NAME string Type.
 
 ---@class MarkFields
 ---@field uri string Path to mark.
----@field label? string Optional label for the mark.
 ---@field type? MarkType Optional type for the mark.
 
 ---@alias Core table

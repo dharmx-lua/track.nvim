@@ -8,8 +8,6 @@ setmetatable(Pad, {
   end,
 })
 
--- TODO: If `Pad` or, `pickers.views` is opened and then if the current branch gets changed, redraw the `Pad/pickers.views` with the new branch's contents.
-
 local A = vim.api
 local V = vim.fn
 local if_nil = vim.F.if_nil
@@ -24,7 +22,13 @@ local strings = require("plenary.strings")
 
 local enum = require("track.dev.enum")
 local CLASS = enum.CLASS
-local URI = enum.URI
+local TERM = enum.M_TYPE.TERM
+local HTTP = enum.M_TYPE.HTTP
+local HTTPS = enum.M_TYPE.HTTPS
+local DIR = enum.M_TYPE.DIR
+local MAN = enum.M_TYPE.MAN
+local FILE = enum.M_TYPE.FILE
+local NO_EXIST = enum.M_TYPE.NO_EXIST
 
 function Pad:_new(opts)
   local types = type(opts)
@@ -48,7 +52,7 @@ function Pad:_new(opts)
 
   self.mappings.n["<cr>"] = function()
     if self:hidden() then return end
-    local mark = Pad.line2mark(A.nvim_get_current_line(), self.icons, self.disable_devicons)
+    local mark = Pad.parse_line(A.nvim_get_current_line(), self.icons, self.disable_devicons)
     if not mark then return end
     self:close()
     if util.to_root_entry(mark, self) then return end
@@ -106,7 +110,7 @@ function Pad.make_entry(index, view_mark, icons, disable_devicons, color_devicon
   return entry
 end
 
-function Pad.line2mark(line, icons, disable_devicons)
+function Pad.parse_line(line, icons, disable_devicons)
   local trimmed = vim.trim(line)
   if trimmed ~= "" then
     local mark
@@ -134,10 +138,10 @@ function Pad:apply_status()
   local lines = A.nvim_buf_get_lines(self.buffer, 0, -1, true)
   for index, line in ipairs(lines) do
     local row = index - 1
-    local mark = Pad.line2mark(line, self.icons, self.disable_devicons)
+    local mark = Pad.parse_line(line, self.icons, self.disable_devicons)
     if mark then
       local absolute = mark:absolute()
-      local allowed = vim.tbl_contains({ URI.TERM, URI.MAN, URI.HTTP, URI.HTTPS }, mark.type)
+      local allowed = vim.tbl_contains({ TERM, MAN, HTTP, HTTPS }, mark.type)
 
       local marker, marker_hl = self.icons.accessible, "TrackPadAccessible"
       if not mark:readable() then
@@ -185,7 +189,7 @@ function Pad:apply_serial()
 
   local lines = A.nvim_buf_get_lines(self.buffer, 0, -1, false)
   for serial, line in ipairs(lines) do
-    local mark = Pad.line2mark(line, self.icons, self.disable_devicons)
+    local mark = Pad.parse_line(line, self.icons, self.disable_devicons)
     if mark then
       vim.keymap.set("n", tostring(serial), function()
         self:close()
@@ -275,9 +279,9 @@ function Pad:render()
 
     local start = range[1][1][2] + (self.disable_devicons and 0 or 1)
     A.nvim_buf_add_highlight(self.buffer, self.namespace, range[2], line, start, start + #mark.uri)
-    if mark.type == URI.FILE or mark.type == URI.DIR or mark.type == URI.NO_EXIST then
+    if mark.type == FILE or mark.type == DIR or mark.type == NO_EXIST then
       self:conceal_path(line, start, mark.uri)
-    elseif mark.type == URI.TERM then
+    elseif mark.type == TERM then
       self:conceal_term(line, start, mark.uri)
     else
       self:conceal_uri(line, start, mark.uri)
@@ -291,8 +295,8 @@ function Pad:sync(save)
   self.branch:clear()
   local lines = A.nvim_buf_get_lines(self.buffer, 0, -1, true)
   for _, line in ipairs(lines) do
-    local parsed_mark = Pad.line2mark(line, self.icons, self.disable_devicons)
-    if parsed_mark then self.branch:add_mark(parsed_mark) end
+    local mark = Pad.parse_line(line, self.icons, self.disable_devicons)
+    if mark then self.branch:add_mark(mark) end
   end
   self:render()
   if save then state.save() end
@@ -303,7 +307,7 @@ function Pad:hidden() return not self.window or not A.nvim_win_is_valid(self.win
 -- stylua: ignore
 function Pad:open()
   if not self:hidden() then return end
-  self._focused = util.parsed_buf_name()
+  self._focused = util.parsed_bufname()
   self.window = A.nvim_open_win(self.buffer, true, self.config)
   A.nvim_win_set_option(self.window, "winhighlight", "SignColumn:NormalFloat,CursorLineSign:NormalFloat,FloatTitle:TrackPadTitle,FloatBorder:NormalFloat")
   A.nvim_win_set_option(self.window, "number", true)

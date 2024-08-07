@@ -18,11 +18,8 @@ local CLASS = require("track.dev.enum").CLASS
 local log = require("track.dev.log")
 local if_nil = vim.F.if_nil
 
----@module "track.model.branch"
+---@type Branch
 local Branch = require("track.model.branch")
-
--- TODO: Implement if cwd/block - cwd != "" then branches from cwd will be shown instead of cwd/block.
--- TODO: Implement a way to distinguish projects i.e., if cwd has .git then mark it as a git directory.
 
 ---Create a new `Root` instance.
 ---@param opts RootFields Available root attributes/fields.
@@ -35,7 +32,6 @@ function Root:_new(opts)
 
   self.path = opts.path
   self.label = opts.label
-  self.links = opts.links
 
   self.disable_history = if_nil(opts.disable_history, true)
   self.maximum_history = if_nil(opts.maximum_history, 10)
@@ -183,20 +179,6 @@ function Root:delete_branch(name)
   if self.stashed == name then self.stashed = nil end
   self:insert_history(self.branches[name])
   self.branches[name] = nil
-end
-
-function Root:link(root_path)
-  assert(root_path and type(root_path) == "string", "root_path needs to be a string and not nil.")
-  self.links = if_nil(self.links, {})
-  table.insert(self.links, root_path)
-  log.trace("Root.link(): linked root " .. root_path .. " to current root")
-end
-
-function Root:unlink(root_path)
-  assert(root_path and type(root_path) == "string", "root_path needs to be a string and not nil.")
-  if not self.links then return end
-  self.links = vim.tbl_filter(function(_item) return _item ~= root_path end, self.links)
-  log.trace("Root.unlink(): unlinked root " .. root_path .. " from current root")
 end
 
 function Root:insert_history(branch, force)

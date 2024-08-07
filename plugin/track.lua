@@ -162,6 +162,7 @@ HI("TrackPadMarkUnlisted", { foreground = "#C397D8" })
 HI("TrackPadMissing", { foreground = "#FFE59E" })
 HI("TrackPadLocked", { foreground = "#E37070" })
 HI("TrackPadDivide", { foreground = "#4B5259" })
+HI("TrackViewsRanged", { foreground = "#54CED6" })
 
 HI("TrackViewsAccessible", { foreground = "#79DCAA" })
 HI("TrackViewsInaccessible", { foreground = "#F87070" })

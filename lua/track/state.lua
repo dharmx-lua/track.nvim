@@ -52,7 +52,10 @@ end
 local function parse_marks(marks)
   local store = {}
   for path, mark in pairs(marks) do
-    store[path] = Mark({ uri = mark.uri, label = mark.label, type = mark.type })
+    store[path] = Mark({
+      uri = mark.uri,
+      type = mark.type,
+    })
   end
   return store
 end
@@ -109,7 +112,6 @@ function M.load_save(action, loadpath, on_load)
     M._roots[path] = Root({
       path = root.path,
       label = root.label,
-      links = root.links,
       main = root.main,
       disable_history = root.disable_history,
       maximum_history = root.maximum_history,

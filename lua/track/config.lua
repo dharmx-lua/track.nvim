@@ -3,6 +3,7 @@ local M = {}
 local if_nil = vim.F.if_nil
 local util = require("track.util")
 
+-- Defaults {{{
 ---Default **track.nvim** opts.
 ---@type TrackOpts
 M._defaults = {
@@ -18,7 +19,8 @@ M._defaults = {
       save = "", -- not in use
       directory = "",
       terminal = "",
-      manual = "",
+      ranged = "",
+      manual = "", -- lua/file.lua:23:12 files with range
       site = "",
       locked = " ", -- existence cannot be checked (not a path i.e. a command/link/man)
       missing = " ", -- path has been moved/deleted/renamed
@@ -193,60 +195,28 @@ M._defaults = {
     level = "warn",
   },
 }
+-- }}}
 
----Current **track.nvim** opts. This will be initially the same as `defaults`.
+---@private
 ---@type TrackOpts
 M._current = vim.deepcopy(M._defaults)
 
----Merge `opts` with current track opts (`M._current`).
----@param opts TrackOpts
-function M.merge(opts)
-  ---@type TrackOpts
-  opts = if_nil(opts, {})
-  M._current = vim.tbl_deep_extend("keep", opts, M._current)
-end
-
----Merge `opts` with current track picker opts (`M._current.pickers`).
----@param opts TrackPickers
-function M.merge_pickers(opts)
-  ---@type TrackPickers
-  opts = if_nil(opts, {})
-  M._current.pickers = vim.tbl_deep_extend("keep", opts, M._current.pickers)
-end
-
----@param opts TrackPad
-function M.merge_pad(opts)
-  ---@type TrackPad
-  opts = if_nil(opts, {})
-  M._current.pad = vim.tbl_deep_extend("keep", opts, M._current.pad)
-end
-
----Merge `opts` with current track opts and return it. This will not write to `M._current`.
----@param opts TrackOpts
----@return TrackOpts
-function M.extend(opts) return vim.tbl_deep_extend("keep", opts, M._current) end
-
----Merge `opts` with current track picker opts and return it. This will not write to `M._current.pickers`.
----@param opts TrackPickers
----@return TrackPickers
-function M.extend_pickers(opts) return vim.tbl_deep_extend("keep", opts, M._current.pickers) end
-
----@param opts TrackPad
----@return TrackPad
-function M.extend_pad(opts) return vim.tbl_deep_extend("keep", opts, M._current.pad) end
-
----Return current track config.
----@return TrackOpts
-function M.get() return M._current end
-
----Return current track pickers config.
----@return TrackPickers
-function M.get_pickers() return M._current.pickers end
-
----@return TrackPad
-function M.get_pad() return M._current.pad end
-
----@return TrackHooks
-function M.get_hooks() return M._current.hooks end
-
-return M
+return setmetatable(M, {
+  __index = function(self, key)
+    if key == "get" then
+      return function() return rawget(self, "_current") end
+    elseif key == "merge" then
+      return function(opts) rawset(self, "_current", vim.tbl_deep_extend("keep", opts, rawget(self, "_current"))) end
+    elseif key == "extend" then
+      return function(opts) return vim.tbl_deep_extend("keep", opts, M._defaults) end
+    end
+    local _, _, category, item = key:find("^(%w+)_(%w+)") -- this looks like an emoji (゜ロ゜)
+    if category == "get" then
+      return function() return self.get()[item] end
+    elseif category == "merge" then
+      return function(opts) self.merge({ [item] = opts }) end
+    elseif category == "extend" then
+      return function(opts) return self.extend({ [item] = opts })[item] end
+    end
+  end,
+})
