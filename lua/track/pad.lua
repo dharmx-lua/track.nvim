@@ -65,6 +65,7 @@ function Pad:_new(opts)
   self.config.col = (vim.o.columns - self.config.width) / 2
 
   A.nvim_buf_set_option(self.buffer, "filetype", "track")
+  A.nvim_buf_set_option(self.buffer, "buftype", "nofile")
   A.nvim_buf_set_name(self.buffer, self.branch.name)
 
   for mode, maps in pairs(self.mappings) do
